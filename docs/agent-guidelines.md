@@ -38,7 +38,7 @@ They do **not** apply to:
 
 ### 3.1 High-Level Workflow
 
-1. Pick a **single GitHub issue** from the "Ready" or "In Progress" column (work on issues sequentially within each milestone).
+1. Pick a **single open GitHub issue** (work on issues sequentially within each milestone).
 
 2. Read the issue description and all referenced documents:
    - The issue body
@@ -312,9 +312,7 @@ When in doubt, leave a `TODO` comment and let a human fill in values.
 
 ### 11.1 Picking Work
 
-- Only work on issues in:
-  - `Ready` column
-  - `In Progress` column (if assigned to you or explicitly available)
+- Only work on open issues that are not already assigned to someone else
 
 - Work on issues sequentially within each milestone (don't skip ahead to later milestones).
 

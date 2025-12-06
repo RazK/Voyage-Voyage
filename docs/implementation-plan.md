@@ -618,7 +618,7 @@ For each milestone in this plan:
    ```
 
 4. **Labels:** Add `milestone-[X]` and relevant labels (e.g., `backend`, `api`, `database`)
-5. **Column:** Place in "Ready" when dependencies are met
+5. **Status:** Keep issues open when ready to work on
 
 ### Breaking Down Large Milestones
 
