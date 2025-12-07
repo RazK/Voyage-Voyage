@@ -16,7 +16,14 @@ Voyage Voyage automatically:
 
 ```
 .
-├── backend/          # FastAPI backend (to be implemented)
+├── backend/          # FastAPI backend
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── db/
+│   │   ├── models/
+│   │   └── services/
+│   └── alembic/
 ├── frontend/         # Future UI (placeholder)
 ├── docs/            # Documentation
 │   ├── prd.md                    # Product requirements
@@ -37,9 +44,9 @@ Voyage Voyage automatically:
 
 ## Development Status
 
-**Current Status**: Pre-Milestone 1
+**Current Status**: Milestone 1 (Repo + Skeleton) in progress
 
-The project is in the planning phase. Implementation will follow the milestones defined in `docs/implementation-plan.md`.
+The FastAPI backend skeleton and local infrastructure scaffolding are now in place.
 
 ## Getting Started
 
@@ -53,9 +60,17 @@ The project is in the planning phase. Implementation will follow the milestones 
 
 1. Clone the repository
 2. Copy `.env.example` to `.env` and fill in your values
-3. Install dependencies: `pip install -r requirements.txt` (to be created)
-4. Run database: `docker compose up db` (to be created)
-5. Start backend: `uvicorn app.main:app --reload` (to be implemented)
+3. (Recommended) Create a virtual environment: `python -m venv .venv`
+4. Activate it and install dependencies: `pip install -r requirements.txt`
+5. Start Postgres locally: `docker compose up db`
+6. Run the backend API:
+   ```bash
+   uvicorn app.main:app --reload --app-dir backend
+   ```
+7. Verify the health endpoint:
+   ```bash
+   curl http://localhost:8000/api/health
+   ```
 
 ## Implementation
 
