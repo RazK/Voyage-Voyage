@@ -13,13 +13,13 @@ from app.core.oauth import (
     get_authorization_url,
     generate_state_token,
 )
-from app.models import User, OAuthCredential
+from app.models import User, OAuthCredential, OAuthState
 
 router = APIRouter()
 
 
 @router.get("/google/start")
-async def google_oauth_start():
+async def google_oauth_start(db: Session = Depends(get_db)):
     """
     Start Google OAuth flow.
 
@@ -30,18 +30,29 @@ async def google_oauth_start():
         state = generate_state_token()
         auth_url = get_authorization_url(state)
 
+        # Store state token in database for CSRF protection
+        oauth_state = OAuthState(state_token=state)
+        db.add(oauth_state)
+        db.commit()
+
         return {"auth_url": auth_url, "state": state}
     except OAuthError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"OAuth configuration error: {str(e)}",
         ) from e
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start OAuth flow: {str(e)}",
+        ) from e
 
 
 @router.get("/google/callback")
 async def google_oauth_callback(
     code: str = Query(..., description="Authorization code from Google"),
-    state: str = Query(None, description="State token for CSRF protection"),
+    state: str = Query(..., description="State token for CSRF protection"),
     db: Session = Depends(get_db),
 ):
     """
@@ -51,6 +62,27 @@ async def google_oauth_callback(
     and returns JWT token.
     """
     try:
+        # Validate state token for CSRF protection
+        oauth_state = db.query(OAuthState).filter(OAuthState.state_token == state).first()
+        if not oauth_state:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid state token",
+            )
+
+        if oauth_state.is_expired():
+            # Clean up expired state token
+            db.delete(oauth_state)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="State token has expired. Please start the OAuth flow again.",
+            )
+
+        # Remove used state token (single-use) - commit immediately to prevent reuse
+        db.delete(oauth_state)
+        db.commit()
+
         # Exchange code for tokens
         credentials, user_info = exchange_code_for_tokens(code)
 
@@ -79,6 +111,12 @@ async def google_oauth_callback(
                 user.email = email
 
         # Store or update OAuth credentials
+        if not credentials.refresh_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OAuth flow did not return a refresh token. Please try again and ensure you grant all requested permissions.",
+            )
+        
         refresh_token_encrypted = encrypt_token(credentials.refresh_token)
 
         oauth_cred = (
