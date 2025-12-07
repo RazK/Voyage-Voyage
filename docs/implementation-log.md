@@ -6,7 +6,7 @@ This document tracks meaningful changes to the Voyage Voyage project.
 
 ### Milestone 1: Backend Skeleton Setup
 
-**PR:** (to be added after PR is created)
+**PR:** #7
 
 **Summary:** Implemented foundational backend structure with FastAPI, database configuration, and development tooling.
 
