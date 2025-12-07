@@ -81,9 +81,11 @@ This document outlines the step-by-step implementation plan for Voyage Voyage MV
 
 ---
 
-## Milestone 2: OAuth + Albums List
+## Milestone 2: OAuth + Photo Selection (Picker API)
 
-**Goal:** Implement Google OAuth authentication and list user's Google Photos albums.
+**Goal:** Implement Google OAuth authentication and photo selection via Google Photos Picker API.
+
+**⚠️ IMPORTANT:** Google changed Photos API in March 2025. Library API can no longer list user's existing albums. Must use Picker API for photo selection.
 
 ### Tasks
 
@@ -111,13 +113,15 @@ This document outlines the step-by-step implementation plan for Voyage Voyage MV
    - Create `oauth_credentials` table (user_id, provider, refresh_token, expires_at, scopes, updated_at)
    - Add Alembic migration
 
-5. **Google Photos integration (read)**
-   - Set up Google Photos API client
-   - Implement token refresh logic
-   - Implement `GET /api/albums` endpoint
-   - Fetch albums from Google Photos API
-   - Handle pagination with `nextPageToken`
-   - Return album list with: id, title, mediaItemCount, productUrl
+5. **Google Photos Picker API integration**
+   - Set up Picker API client
+   - Implement `POST /api/photos/picker/session` endpoint
+   - Create picker session via `photospicker.googleapis.com/v1/sessions`
+   - Return `pickerUri` to client
+   - Implement `GET /api/photos/picker/session/{sessionId}` endpoint
+   - Poll picker session status
+   - Implement `GET /api/photos/picker/session/{sessionId}/items` endpoint
+   - Retrieve selected media items via Picker API
 
 6. **Token encryption**
    - Implement AES-GCM encryption for refresh tokens
@@ -126,13 +130,39 @@ This document outlines the step-by-step implementation plan for Voyage Voyage MV
 
 ### Acceptance Criteria
 
-- [ ] `GET /api/auth/google/start` returns `{"auth_url": "..."}`
-- [ ] OAuth callback creates user and returns token
-- [ ] `GET /api/auth/me` returns current user when authenticated
-- [ ] `GET /api/auth/me` returns 401 when not authenticated
-- [ ] `GET /api/albums` lists user's Google Photos albums
-- [ ] Refresh tokens are encrypted at rest
-- [ ] Manual test: complete OAuth flow and list albums via curl
+- [x] `GET /api/auth/google/start` returns `{"auth_url": "..."}`
+- [x] OAuth callback creates user and returns token
+- [x] `GET /api/auth/me` returns current user when authenticated
+- [x] `GET /api/auth/me` returns 401 when not authenticated
+- [x] `POST /api/photos/picker/session` creates picker session and returns `pickerUri`
+- [x] `GET /api/photos/picker/session/{sessionId}` returns session status
+- [x] `GET /api/photos/picker/session/{sessionId}/items` returns selected media items
+
+### Known Limitations
+
+**⚠️ Google Photos API Changes (2025):**
+- Library API no longer supports listing user's existing albums
+- Must use Picker API for photo selection (users explicitly choose photos)
+- Library API can only be used for albums/content created by your app
+- See `docs/PHOTOS_API_CHANGES.md` for full details
+
+### Updated Scopes Required
+
+**For OAuth (Voyage Voyage backend):**
+- `https://www.googleapis.com/auth/photospicker.mediaitems.readonly` – Required for Google Photos Picker API `CreateSession` and reading selected items
+- `https://www.googleapis.com/auth/photoslibrary.appendonly` – Create albums/media items in Google Photos for the curated output
+- `https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata` – Read albums/media items that were created by this app (app-created data only)
+- `openid` – Associate the Google Account with an internal user
+- `https://www.googleapis.com/auth/userinfo.email` – Read primary Google Account email
+- `https://www.googleapis.com/auth/userinfo.profile` – Read basic profile info
+
+**Notes:**
+- Do **not** request the deprecated scopes `photoslibrary` or `photoslibrary.readonly`; they no longer grant read access to the user’s full library.
+- Picker API uses the same OAuth access token as the backend; it is **not** anonymous or key-based. If `photospicker.mediaitems.readonly` is missing from the token, `CreateSession` will return `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT`.
+- Manual test for this milestone:
+  - Complete the OAuth flow
+  - Verify the access token includes `photospicker.mediaitems.readonly` via `tokeninfo`
+  - Call `POST https://photospicker.googleapis.com/v1/sessions` with that token and receive a valid `pickerUri`
 
 ### Dependencies
 

@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
+from app.api import auth, picker
+
 app = FastAPI(
     title="Voyage Voyage",
     description="Transform messy Google Photos trip albums into clean, cinematic, curated experiences",
@@ -21,6 +23,12 @@ async def health_check():
         "time": datetime.now(timezone.utc).isoformat(),
     }
 
+
+# Include auth routes
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+# Include picker routes
+api_router.include_router(picker.router, prefix="/photos/picker", tags=["picker"])
 
 app.include_router(api_router)
 

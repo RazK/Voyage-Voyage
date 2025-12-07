@@ -102,3 +102,30 @@ docker run -p 8000:8000 voyage-voyage:latest
 
 **Note:** Build context should be the `backend/` directory where the Dockerfile is located.
 
+## API Usage Examples
+
+See `docs/api-examples.md` for detailed examples of:
+- OAuth authentication flow
+- Creating and using Picker API sessions
+- Downloading selected photos
+- Complete end-to-end flow scripts
+
+Quick start:
+
+```bash
+# 1. Start OAuth
+curl http://localhost:8000/api/auth/google/start
+
+# 2. Visit auth_url, get token from callback
+
+# 3. Create picker session
+curl -X POST -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8000/api/photos/picker/session
+
+# 4. Open pickerUri in browser, select photos
+
+# 5. Get selected items
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8000/api/photos/picker/session/SESSION_ID/items
+```
+
