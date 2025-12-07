@@ -16,7 +16,11 @@ Voyage Voyage automatically:
 
 ```
 .
-├── backend/          # FastAPI backend (to be implemented)
+├── backend/          # FastAPI backend
+│   ├── app/         # Application code
+│   ├── tests/       # Test suite
+│   ├── Dockerfile   # Container configuration
+│   └── pyproject.toml  # Python dependencies
 ├── frontend/         # Future UI (placeholder)
 ├── docs/            # Documentation
 │   ├── prd.md                    # Product requirements
@@ -37,25 +41,73 @@ Voyage Voyage automatically:
 
 ## Development Status
 
-**Current Status**: Pre-Milestone 1
+**Current Status**: Milestone 1 - Backend Skeleton Complete
 
-The project is in the planning phase. Implementation will follow the milestones defined in `docs/implementation-plan.md`.
+The backend skeleton is set up with FastAPI. See `backend/README.md` for backend-specific setup instructions.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.9+
-- PostgreSQL
-- Docker and Docker Compose (for local development)
+- Python 3.9 or higher
+- Docker (optional, for containerized development)
 
-### Setup
+### Backend Setup
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in your values
-3. Install dependencies: `pip install -r requirements.txt` (to be created)
-4. Run database: `docker compose up db` (to be created)
-5. Start backend: `uvicorn app.main:app --reload` (to be implemented)
+1. **Navigate to the backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -e .
+   ```
+
+4. **Configure environment variables:**
+   ```bash
+   # From the project root:
+   cp .env.example .env
+   ```
+   
+   Edit `.env` with your actual configuration values. **Important:** Never commit real secrets to git. Only `.env.example` should be in version control - real secrets go only in `.env` or cloud configuration.
+
+5. **Run the application:**
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   
+   The server will start on `http://localhost:8000`
+
+5. **Start the database (optional, for full stack):**
+   ```bash
+   cd backend
+   docker compose up db
+   ```
+
+### Healthcheck
+
+Verify the application is running by checking the health endpoint:
+
+```bash
+curl http://localhost:8000/api/health
+```
+
+Or open in your browser: `http://localhost:8000/api/health`
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "time": "2025-12-07T02:00:00Z"
+}
+```
 
 ## Implementation
 
