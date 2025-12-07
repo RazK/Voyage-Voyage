@@ -73,31 +73,93 @@ Returns the current authenticated user.
 
 ----
 
-## 3. Albums
+## 3. Photos Picker API
 
-These endpoints interact with Google Photos albums through our backend.
+These endpoints allow users to select photos using Google Photos Picker API.
 
-### 3.1 GET /api/albums
+### 3.1 POST /api/photos/picker/session
 
-List albums available to the authenticated user from Google Photos.
+Create a new Google Photos Picker session.
 
 **Auth:** required
 
 **Response 200**:
 {
-  "albums": [
+  "sessionId": "uuid",
+  "pickerUri": "https://photospicker.googleapis.com/v1/..."
+}
+
+**Usage:** User should visit `pickerUri` in a browser to select photos.
+
+----
+
+### 3.2 GET /api/photos/picker/session/{sessionId}
+
+Get the status of a Picker API session.
+
+**Auth:** required
+
+**Path params:**
+- `sessionId` (string, required) – Picker session ID
+
+**Response 200**:
+{
+  "sessionId": "uuid",
+  "mediaItemsSet": true,
+  "state": "COMPLETED"
+}
+
+**State values:** `PENDING`, `ACTIVE`, `COMPLETED`, `EXPIRED`
+
+----
+
+### 3.3 GET /api/photos/picker/session/{sessionId}/items
+
+Get media items selected in a Picker API session.
+
+**Auth:** required
+
+**Path params:**
+- `sessionId` (string, required) – Picker session ID
+
+**Query params:**
+- `page_token` (string, optional) – Token for pagination
+
+**Response 200**:
+{
+  "mediaItems": [
     {
-      "id": "google-album-id",
-      "title": "Epic Boys Trip",
-      "mediaItemCount": 123,
-      "productUrl": "https://photos.google.com/..."
+      "id": "google-photos-media-id",
+      "filename": "IMG_1234.jpg",
+      "mimeType": "image/jpeg",
+      "mediaMetadata": {
+        "width": "4000",
+        "height": "3000"
+      },
+      "baseUrl": "https://lh3.googleusercontent.com/...=d",
+      "type": "PHOTO",
+      "createTime": "2025-12-07T10:30:00Z"
     }
-  ]
+  ],
+  "nextPageToken": "token-for-next-page"
+}
+
+**Note:** `baseUrl` includes `=d` parameter for full resolution download. BaseUrl is valid for 60 minutes and requires Authorization header.
+
+**Response 404:**
+{
+  "detail": "Media items not available yet. User must select photos in the picker first."
 }
 
 ----
 
-### 3.2 POST /api/albums/{albumId}/clone
+## 4. Albums (Future)
+
+*Note: The `/api/albums` endpoint was deprecated in Milestone 2 due to Google Photos API changes. Users must use the Picker API (Section 3) to select photos.*
+
+### 4.1 POST /api/albums/{albumId}/clone
+
+### 4.1 POST /api/albums/{albumId}/clone
 
 Clone an album **without processing** (Milestone 2 behavior).
 
@@ -126,7 +188,7 @@ Clone an album **without processing** (Milestone 2 behavior).
 
 ----
 
-### 3.3 POST /api/albums/{albumId}/process
+### 4.2 POST /api/albums/{albumId}/process
 
 Trigger the **full enhancement pipeline** for the album.
 
@@ -157,9 +219,9 @@ Steps (conceptual):
 
 ----
 
-## 4. Jobs
+## 5. Jobs
 
-### 4.1 GET /api/jobs/{jobId}
+### 5.1 GET /api/jobs/{jobId}
 
 Fetch status of a processing job.
 **Path params:**
@@ -204,9 +266,9 @@ Fetch status of a processing job.
 
 ----
 
-## 5. Ratings
+## 6. Ratings
 
-### 5.1 POST /api/albums/{jobId}/rating
+### 6.1 POST /api/albums/{jobId}/rating
 
 Submit a rating for a finished (or at least completed-output) job/album.
 
@@ -241,7 +303,7 @@ Constraints:
 
 ----
 
-### 5.2 GET /api/albums/{jobId}/rating
+### 6.2 GET /api/albums/{jobId}/rating
 
 Fetch an existing rating for a job, if it exists.
 
@@ -265,11 +327,11 @@ Fetch an existing rating for a job, if it exists.
 
 ----
 
-## 6. Debug / Development Endpoints
+## 7. Debug / Development Endpoints
 
 These endpoints are meant for *internal testing and derisking*, not end users. They may be behind a feature flag or require a special internal API key in production.
 
-### 6.1 POST /api/debug/enhance-single
+### 7.1 POST /api/debug/enhance-single
 
 Run the enhancement pipeline on a single test image.
 
@@ -297,7 +359,7 @@ For MVP we can start with Option A only.
 
 ----
 
-### 6.2 POST /api/debug/restyle-single
+### 7.2 POST /api/debug/restyle-single
 
 Apply a restyle to a single hero image.
 
@@ -324,7 +386,7 @@ Allowed values for `style` in MVP:
 
 ----
 
-### 6.3 POST /api/debug/dedupe
+### 7.3 POST /api/debug/dedupe
 
 Exercise deduplication logic on a small set of images.
 
@@ -353,9 +415,9 @@ Exercise deduplication logic on a small set of images.
 
 ----
 
-## 7. Health & Utility
+## 8. Health & Utility
 
-### 7.1 GET /api/health
+### 8.1 GET /api/health
 
 Simple health check.
 
@@ -367,7 +429,7 @@ Simple health check.
 
 ----
 
-## 8. Error Format (MVP)
+## 9. Error Format (MVP)
 
 To be simple, a basic error contract is sufficient:
 
@@ -386,7 +448,7 @@ Examples:
 
 ----
 
-## 9. Versioning
+## 10. Versioning
 
 
 For MVP:
@@ -397,7 +459,7 @@ For MVP:
 
 ----
 
-## 10. Notes for Implementers
+## 11. Notes for Implementers
 
 - Every endpoint must be documented here **before** or alongside implementation.
 - Every PR that changes an endpoint must update this file.

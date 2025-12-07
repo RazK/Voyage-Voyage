@@ -92,3 +92,4 @@ service-account-*.json
 # pyenv
 .python-version
 
+client_secret*.json
