@@ -16,8 +16,9 @@ This document tracks all accounts involved in the Voyage Voyage project.
   - Has access to Google Photos albums for testing
 
 ## OAuth Configuration
-- **Client ID**: `835020136268-9oggnni33jhji0q44is4c3occsbp1rml.apps.googleusercontent.com`
-- **Redirect URI**: `http://localhost:8000/api/auth/google/callback`
+- **Client ID**: Set via `GOOGLE_CLIENT_ID` environment variable (see `.env.example`)
+- **Client Secret**: Set via `GOOGLE_CLIENT_SECRET` environment variable (see `.env.example`)
+- **Redirect URI**: `http://localhost:8000/api/auth/google/callback` (configured in Google Cloud Console)
 - **Project ID**: `voyage-voyage-480501`
 
 ## Notes
